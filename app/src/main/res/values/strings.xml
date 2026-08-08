@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Health and Fitness</string>
+    <string name="log_workout">Log Workout</string>
+    <string name="workout_history">Workout History</string>
+    <string name="activity_type">Activity Type</string>
+    <string name="duration">Duration</string>
+    <string name="intensity">Intensity</string>
+    <string name="notes">Notes</string>
+    <string name="calculate_submit">Calculate &amp; Submit</string>
+    <string name="save_workout">Save Workout</string>
+    <string name="view_history">View Workout History</string>
+</resources>

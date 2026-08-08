@@ -1,0 +1,3 @@
+-keep class com.example.healthandfitness.** { *; }
+-keep class androidx.** { *; }
+-keep class com.google.android.gms.** { *; }
