@@ -11,28 +11,12 @@ class WorkoutRepository(private val workoutDao: WorkoutDao) {
         return workoutDao.insertWorkout(workout)
     }
 
-    suspend fun updateWorkout(workout: WorkoutEntity) {
-        workoutDao.updateWorkout(workout)
-    }
-
     suspend fun deleteWorkout(workout: WorkoutEntity) {
         workoutDao.deleteWorkout(workout)
     }
 
-    suspend fun getWorkoutById(id: Int): WorkoutEntity? {
-        return workoutDao.getWorkoutById(id)
-    }
-
     fun getAllWorkouts(): Flow<List<WorkoutEntity>> {
         return workoutDao.getAllWorkouts()
-    }
-
-    fun getWorkoutsByType(activityType: String): Flow<List<WorkoutEntity>> {
-        return workoutDao.getWorkoutsByType(activityType)
-    }
-
-    fun getWorkoutsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutEntity>> {
-        return workoutDao.getWorkoutsByDateRange(startTime, endTime)
     }
 
     fun getTotalCaloriesBurned(): Flow<Double?> {
@@ -45,10 +29,6 @@ class WorkoutRepository(private val workoutDao: WorkoutDao) {
 
     fun getTotalWorkoutCount(): Flow<Int> {
         return workoutDao.getTotalWorkoutCount()
-    }
-
-    suspend fun deleteAllWorkouts() {
-        workoutDao.deleteAllWorkouts()
     }
 
     fun calculateCaloriesBurned(activityType: String, duration: Int, intensity: String): Double {

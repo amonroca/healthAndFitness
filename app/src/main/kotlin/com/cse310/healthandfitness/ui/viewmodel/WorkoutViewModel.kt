@@ -16,9 +16,6 @@ class WorkoutViewModel(private val repository: WorkoutRepository) : ViewModel() 
     private val _workoutState = MutableStateFlow<List<WorkoutEntity>>(emptyList())
     val workoutState: StateFlow<List<WorkoutEntity>> = _workoutState.asStateFlow()
 
-    private val _selectedWorkout = MutableStateFlow<WorkoutEntity?>(null)
-    val selectedWorkout: StateFlow<WorkoutEntity?> = _selectedWorkout.asStateFlow()
-
     private val _totalCalories = MutableStateFlow(0.0)
     val totalCalories: StateFlow<Double> = _totalCalories.asStateFlow()
 
@@ -27,9 +24,6 @@ class WorkoutViewModel(private val repository: WorkoutRepository) : ViewModel() 
 
     private val _totalWorkouts = MutableStateFlow(0)
     val totalWorkouts: StateFlow<Int> = _totalWorkouts.asStateFlow()
-
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     init {
         loadAllWorkouts()
@@ -73,7 +67,6 @@ class WorkoutViewModel(private val repository: WorkoutRepository) : ViewModel() 
         notes: String = ""
     ) {
         viewModelScope.launch {
-            _isLoading.value = true
             val calories = repository.calculateCaloriesBurned(activityType, duration, intensity)
             val workout = WorkoutEntity(
                 activityType = activityType,
@@ -87,29 +80,12 @@ class WorkoutViewModel(private val repository: WorkoutRepository) : ViewModel() 
                 notes = notes
             )
             repository.insertWorkout(workout)
-            _isLoading.value = false
         }
     }
 
     fun deleteWorkout(workout: WorkoutEntity) {
         viewModelScope.launch {
             repository.deleteWorkout(workout)
-        }
-    }
-
-    fun selectWorkout(workout: WorkoutEntity) {
-        _selectedWorkout.value = workout
-    }
-
-    fun clearSelection() {
-        _selectedWorkout.value = null
-    }
-
-    fun getWorkoutsByType(activityType: String) {
-        viewModelScope.launch {
-            repository.getWorkoutsByType(activityType).collect { workouts ->
-                _workoutState.value = workouts
-            }
         }
     }
 }

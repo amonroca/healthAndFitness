@@ -1,5 +1,10 @@
 package com.cse310.healthandfitness.ui.screens
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,14 +25,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import com.cse310.healthandfitness.util.LocationManager
 import com.cse310.healthandfitness.ui.viewmodel.WorkoutViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun WorkoutLogScreen(viewModel: WorkoutViewModel, onNavigateToHistory: () -> Unit = {}) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val locationManager = remember(context) { LocationManager(context) }
+
     var selectedActivity by remember { mutableStateOf("Running") }
     var duration by remember { mutableStateOf("") }
     var selectedIntensity by remember { mutableStateOf("Moderate") }
@@ -36,9 +50,63 @@ fun WorkoutLogScreen(viewModel: WorkoutViewModel, onNavigateToHistory: () -> Uni
     var showIntensityMenu by remember { mutableStateOf(false) }
     var showSummary by remember { mutableStateOf(false) }
     var estimatedCalories by remember { mutableStateOf(0.0) }
+    var saveMessage by remember { mutableStateOf("") }
+    var isSavingWorkout by remember { mutableStateOf(false) }
 
     val activityTypes = listOf("Running", "Walking", "Cycling", "Swimming", "Yoga", "Strength Training")
     val intensityLevels = listOf("Low", "Moderate", "High")
+
+    fun resetForm() {
+        selectedActivity = "Running"
+        duration = ""
+        selectedIntensity = "Moderate"
+        notes = ""
+        showSummary = false
+        isSavingWorkout = false
+    }
+
+    fun saveWorkout(latitude: Double = 0.0, longitude: Double = 0.0, message: String) {
+        viewModel.addWorkout(
+            activityType = selectedActivity,
+            duration = duration.toIntOrNull() ?: 0,
+            intensity = selectedIntensity,
+            latitude = latitude,
+            longitude = longitude,
+            notes = notes
+        )
+        saveMessage = message
+        resetForm()
+    }
+
+    fun saveWorkoutWithLocation() {
+        isSavingWorkout = true
+        coroutineScope.launch {
+            val location = locationManager.getCurrentLocation()
+            if (location != null) {
+                saveWorkout(
+                    latitude = location.latitude,
+                    longitude = location.longitude,
+                    message = "Workout saved with your current location."
+                )
+            } else {
+                saveWorkout(message = "Workout saved, but your current location was unavailable.")
+            }
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val hasPermission =
+            permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+        if (hasPermission) {
+            saveWorkoutWithLocation()
+        } else {
+            saveWorkout(message = "Workout saved without location because permission was denied.")
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -137,6 +205,7 @@ fun WorkoutLogScreen(viewModel: WorkoutViewModel, onNavigateToHistory: () -> Uni
                 if (duration.isNotEmpty()) {
                     estimatedCalories = calculateCalories(selectedActivity, duration.toIntOrNull() ?: 0, selectedIntensity)
                     showSummary = true
+                    saveMessage = ""
                 }
             },
             modifier = Modifier
@@ -174,31 +243,40 @@ fun WorkoutLogScreen(viewModel: WorkoutViewModel, onNavigateToHistory: () -> Uni
 
                     Button(
                         onClick = {
-                            viewModel.addWorkout(
-                                activityType = selectedActivity,
-                                duration = duration.toIntOrNull() ?: 0,
-                                intensity = selectedIntensity,
-                                notes = notes
-                            )
-                            selectedActivity = "Running"
-                            duration = ""
-                            selectedIntensity = "Moderate"
-                            notes = ""
-                            showSummary = false
+                            if (hasLocationPermission(context)) {
+                                saveWorkoutWithLocation()
+                            } else {
+                                permissionLauncher.launch(
+                                    arrayOf(
+                                        Manifest.permission.ACCESS_FINE_LOCATION,
+                                        Manifest.permission.ACCESS_COARSE_LOCATION
+                                    )
+                                )
+                            }
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !isSavingWorkout
                     ) {
-                        Text("Save Workout")
+                        Text(if (isSavingWorkout) "Saving..." else "Save Workout")
                     }
 
                     OutlinedButton(
                         onClick = { showSummary = false },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !isSavingWorkout
                     ) {
                         Text("Edit")
                     }
                 }
             }
+        }
+
+        if (saveMessage.isNotEmpty()) {
+            Text(
+                text = saveMessage,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
 
         OutlinedButton(
@@ -210,6 +288,17 @@ fun WorkoutLogScreen(viewModel: WorkoutViewModel, onNavigateToHistory: () -> Uni
             Text("View Workout History")
         }
     }
+}
+
+private fun hasLocationPermission(context: Context): Boolean {
+    return ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.ACCESS_FINE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED ||
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
 }
 
 private fun calculateCalories(activity: String, duration: Int, intensity: String): Double {

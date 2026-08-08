@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.HealthAndFitness" parent="android:Theme.Material.Light">
-        <!-- Primary brand color -->
-        <item name="android:colorPrimary">#6200EE</item>
-        <item name="android:colorPrimaryDark">#3700B3</item>
-        <item name="android:colorAccent">#03DAC6</item>
+    <style name="Theme.HealthAndFitness" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/blue_performance_primary</item>
+        <item name="colorPrimaryVariant">@color/blue_performance_primary_dark</item>
+        <item name="colorSecondary">@color/blue_performance_secondary</item>
+        <item name="android:statusBarColor">@color/blue_performance_primary_dark</item>
+        <item name="android:navigationBarColor">@color/blue_performance_background_dark</item>
+        <item name="android:windowBackground">@color/blue_performance_background</item>
     </style>
 </resources>

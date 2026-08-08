@@ -21,10 +21,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.cse310.healthandfitness.data.entities.WorkoutEntity
+import com.cse310.healthandfitness.util.LocationManager
 import com.cse310.healthandfitness.ui.viewmodel.WorkoutViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -116,6 +120,16 @@ fun WorkoutHistoryScreen(viewModel: WorkoutViewModel, onNavigateToLog: () -> Uni
 
 @Composable
 fun WorkoutCard(workout: WorkoutEntity, onDelete: (WorkoutEntity) -> Unit) {
+    val context = LocalContext.current
+    val locationManager = remember(context) { LocationManager(context) }
+    val readableLocation by produceState<String?>(initialValue = null, workout.id, workout.latitude, workout.longitude) {
+        value = if (hasSavedLocation(workout)) {
+            locationManager.getAddress(workout.latitude, workout.longitude)
+        } else {
+            null
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -172,6 +186,13 @@ fun WorkoutCard(workout: WorkoutEntity, onDelete: (WorkoutEntity) -> Unit) {
                 )
             }
 
+            if (hasSavedLocation(workout)) {
+                Text(
+                    text = "Location: ${readableLocation ?: "%.5f, %.5f".format(workout.latitude, workout.longitude)}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
             if (workout.notes.isNotEmpty()) {
                 Text(
                     text = "Notes: ${workout.notes}",
@@ -205,4 +226,8 @@ fun DetailItem(label: String, value: String) {
 private fun formatDate(timestamp: Long): String {
     val sdf = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
     return sdf.format(Date(timestamp))
+}
+
+private fun hasSavedLocation(workout: WorkoutEntity): Boolean {
+    return workout.latitude != 0.0 || workout.longitude != 0.0
 }
