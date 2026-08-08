@@ -3,6 +3,7 @@ package com.cse310.healthandfitness
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -37,7 +38,7 @@ class MainActivity : ComponentActivity() {
         val database = HealthAndFitnessDatabase.getDatabase(this)
         val repository = WorkoutRepository(database.workoutDao())
         val factory = WorkoutViewModelFactory(repository)
-        viewModel = ViewModelProvider(this, factory).get(WorkoutViewModel::class.java)
+        viewModel = ViewModelProvider(this, factory)[WorkoutViewModel::class.java]
 
         setContent {
             HealthAndFitnessTheme {
@@ -61,15 +62,17 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) { innerPadding ->
-                    when (selectedTab) {
-                        0 -> WorkoutLogScreen(
-                            viewModel = viewModel,
-                            onNavigateToHistory = { selectedTab = 1 }
-                        )
-                        1 -> WorkoutHistoryScreen(
-                            viewModel = viewModel,
-                            onNavigateToLog = { selectedTab = 0 }
-                        )
+                    Box(modifier = Modifier.padding(innerPadding)) {
+                        when (selectedTab) {
+                            0 -> WorkoutLogScreen(
+                                viewModel = viewModel,
+                                onNavigateToHistory = { selectedTab = 1 }
+                            )
+                            1 -> WorkoutHistoryScreen(
+                                viewModel = viewModel,
+                                onNavigateToLog = { selectedTab = 0 }
+                            )
+                        }
                     }
                 }
             }
