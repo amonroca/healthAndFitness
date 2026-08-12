@@ -6,7 +6,7 @@ This app is a simple health and fitness tracker focused on workout logging. User
 
 I created this app to strengthen my understanding of Android development with Kotlin, Jetpack Compose, Room, and the MVVM pattern. It was also a practical way to learn how to connect UI state, business logic, and local data storage inside a mobile app.
 
-[Software Demo Video](http://youtube.link.goes.here)
+[Software Demo Video](https://youtu.be/vAEJ5fsp3kc)
 
 # Development Environment
 
